@@ -1,0 +1,12 @@
+grant codeBase "file:${org.freeplane.basedirectory}/-" {
+        permission java.security.AllPermission;
+};
+
+grant codeBase "file:${org.freeplane.os.lib.ext}/*" {
+        permission java.security.AllPermission;
+};
+
+grant {
+		permission java.io.FilePermission "${org.freeplane.basedirectory}/-", "read";
+        permission java.lang.RuntimePermission "getClassLoader";
+};

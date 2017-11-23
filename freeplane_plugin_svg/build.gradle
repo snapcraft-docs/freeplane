@@ -1,0 +1,69 @@
+dependencies {
+    compile project(':freeplane')
+
+	// libbatik-java / batik-*.jar:
+	compile 'org.apache.xmlgraphics:batik-all:1.9.1'
+	
+	// libxml-commons-external-java 1.4.01:
+	// org.w3c.dom.svg.SVGDocument
+	//compile 'org.apache.xmlgraphics:xmlgraphics-commons:2.2': does not help!
+	compile 'xml-apis:xml-apis:1.4.01'
+	compile 'xml-apis:xml-apis-ext:1.3.04'
+	
+	// org.apache.xmlgraphics.java2d.color.NamedColorSpace
+	// libxmlgraphics-commons-java / xmlgraphics-commons.jar:
+	compile group: 'org.apache.xmlgraphics', name: 'xmlgraphics-commons', version: '2.2'
+
+	// libfop-java / fop.jar:
+	compile group: 'org.apache.xmlgraphics', name: 'fop', version: '2.1'
+
+	// libavalon-framework-java / avalon-framework.jar:
+	// PDF problem: org.apache.avalon.framework.configuration.Configurable
+	compile group: 'org.apache.avalon.framework', name: 'avalon-framework-api', version: '4.3.1'
+	// PDF problem: org.apache.avalon.framework.configuration.DefaultConfiguration
+	compile group: 'org.apache.avalon.framework', name: 'avalon-framework-impl', version: '4.3.1'
+
+	// libcommons-logging-java / commons-logging.jar:
+	// PDF problem: org.apache.commons.logging.Log
+	compile 'commons-logging:commons-logging:1.2'
+
+	// PDF problem: org.apache.commons.io.output.ByteArrayOutputStream
+	// PDF problem: org.apache.commons.io.IOUtils
+	// PDF problem: org.apache.commons.io.filefilter.IOFileFilter
+	// --> import from core bundle!
+}
+
+jar {
+    manifest {
+        name = pluginid
+        symbolicName = pluginid 
+
+        configurations.runtime.transitive = false
+        def deps = filterAndExternalizePluginDependencies(configurations.runtime.files)
+        deps.add(0, "lib/plugin-" + project.version + '.jar')
+
+        attributes 'Class-Path': deps.join(', ')
+        attributes 'Bundle-ClassPath': '., ' + deps.join(', ')
+
+        instruction 'Bundle-Vendor', 'Freeplane Project'
+        instruction 'Bundle-Activator', pluginid + ".Activator"
+        instruction 'Bundle-RequiredExecutionEnvironment', 'JavaSE-1.7'
+
+        def imports = """\
+                      org.osgi.framework;version="1.3.0",
+                      org.freeplane.core.*,
+                      org.freeplane.features.*,
+                      org.freeplane.main.*,
+                      org.freeplane.n3.*,
+                      org.freeplane.view.*,
+                      org.apache.commons.io,
+                      org.apache.commons.io.output,
+                      org.apache.commons.io.filefilter
+                      """
+        instruction 'Import-Package', imports.replaceAll("\\s+", "")
+        instruction 'Export-Package', ''
+
+        // Require-Bundle is ignored by bnd => replaced by Import-Package!
+        //instruction 'Require-Bundle', 'org.freeplane.core;bundle-version="1.0.1", org.freeplane.plugin.script;bundle-version="1.0.1"'
+    }
+}

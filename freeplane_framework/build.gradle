@@ -1,0 +1,77 @@
+import org.apache.tools.ant.filters.*
+
+task freeplanelauncherJar(type: Jar) {
+     archiveName = 'freeplanelauncher.jar'
+     destinationDir = new File(globalBin)
+
+     dependsOn classes
+     from (sourceSets.main.output) {
+          include("**")
+     }
+     includeEmptyDirs = false
+
+     manifest {
+          attributes("Manifest-Version": "1.0",
+                     "Main-Class": "org.freeplane.launcher.Launcher",
+                     "Class-Path": "framework.jar")
+     }
+}
+
+jar.dependsOn freeplanelauncherJar
+
+task copyFreeplaneShellScript(type: Copy) {
+     from('script/') {
+         include('freeplane.sh')
+         fileMode = 0755
+     }
+	 into(globalBin)
+	 filter(FixCrLfFilter.class, eol:FixCrLfFilter.CrLf.newInstance("lf"))
+}	 
+
+task copyLauncherStuff(type: Copy) {
+	 dependsOn 'copyFreeplaneShellScript'
+     from('script/') {
+         include('*')
+         exclude('freeplane.sh')
+     }
+
+     def knopflerfishJarFile = project.configurations.runtime.files.find {
+         isKnopflerfishJar(it.name)
+     }
+     from(knopflerfishJarFile)
+     // rename [knopflerfish-]framework-*.jar to framework.jar
+     rename { String fileName ->
+         if (isKnopflerfishJar(fileName))
+            return "framework.jar"
+         else
+            return fileName
+     }
+
+     from('windows-icons/') {
+         include('freeplaneIcons.dll')
+     }
+     from('launch4j/') {
+         include('*.exe')
+         include('*.ini')
+     }
+     into(globalBin)
+     dependsOn jar
+}
+
+task makeKnopflerfischPermissionDirs {
+    doLast {
+        new File(globalBin, 'fwdir/perms').mkdirs()
+        new File(globalBin, 'fwdir/condperm').mkdirs()
+    }
+}
+
+eclipseJdt {
+    doLast {
+        File f = file('.settings/org.eclipse.core.resources.prefs')
+        f.append('encoding/windows-installer=ISO-8859-1\n')
+    }
+}
+
+build.dependsOn (copyLauncherStuff, makeKnopflerfischPermissionDirs)
+
+
