@@ -23,13 +23,11 @@ parts:
       export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"
       gradle release -x test -x createGitTag
     install: |
-      unzip DIST/freeplane_bin-*.zip -d \
-      $SNAPCRAFT_PART_INSTALL/
+      unzip DIST/freeplane_bin-*.zip -d $SNAPCRAFT_PART_INSTALL/
     build-packages:
       - unzip
       - openjdk-8-jdk
 
 apps:
   freeplane:
-    command: desktop-launch \
-      $SNAP/freeplane-1.6.10/freeplane.sh
+    command: desktop-launch $SNAP/freeplane-1.6.10/freeplane.sh
